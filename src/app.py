@@ -8,8 +8,9 @@ from flask_swagger import swagger
 from flask_cors import CORS
 from utils import APIException, generate_sitemap
 from admin import setup_admin
-from models import db, User
-#from models import Person
+from models import db, User, Planet, Character, Favorites, FavoritesCharacter,FavoritesPlanet
+from sqlalchemy import select
+
 
 app = Flask(__name__)
 app.url_map.strict_slashes = False
@@ -44,6 +45,35 @@ def handle_hello():
     }
 
     return jsonify(response_body), 200
+
+@app.route("/user", methods=['POST'])
+def create_user():
+
+    data = request.get_json()
+    username = data.get("username")
+    email = data.get("email")
+    password = data.get("password")
+
+    new_user = User(username = username, email = email, password = password)
+    db.session.add(new_user)
+    db.session.commit()
+    
+    return ("Usuario creado")
+
+# @app.route("/characters", methods=["GET"])
+# def get_character():
+
+#     stmt = select(Character)
+#     result = db.session.execute(stmt)
+#     characters = result.scalars().all()
+
+
+#     characters_list = []
+#     for char in characters:
+#         characters_list.append(char.serialize())
+
+#     return jsonify(characters_list)
+
 
 # this only runs if `$ python src/app.py` is executed
 if __name__ == '__main__':
