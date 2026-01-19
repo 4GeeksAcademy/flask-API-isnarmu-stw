@@ -14,9 +14,8 @@ class User(db.Model):
     username: Mapped[str] = mapped_column(String(120), unique=True, nullable=False)
 
     # realationship
-    favorites: Mapped[list["Favorites"]] = relationship(back_populates="user")
-    favoritesPlanet:  Mapped[list["FavoritesPlanet"]] = relationship(back_populates="user")
-    favoritesCharacter:  Mapped[list["FavoritesCharacter"]] = relationship(back_populates="user")
+    favorites: Mapped[list["Favorites"]] = relationship(back_populates="user", cascade= "all, delete-orphan")
+    
     
     def serialize(self):
         return{
@@ -36,8 +35,7 @@ class Planet(db.Model):
     population: Mapped[str] = mapped_column(String(100), nullable=False)
 
     # realationship
-    favorites: Mapped[list["Favorites"]] = relationship(back_populates="planet")
-    favoritesPlanet:  Mapped[list["FavoritesPlanet"]] = relationship(back_populates="planet")
+    favorites_planet:  Mapped[list["FavoritesPlanet"]] = relationship(back_populates="planet", cascade= "all, delete-orphan")
 
     def serialize(self):
         return{
@@ -58,8 +56,8 @@ class Character(db.Model):
     height: Mapped[str] = mapped_column(String(100), nullable=False)
     mass: Mapped[str] = mapped_column(String(20), nullable=False)
 
-    favorites: Mapped[list["Favorites"]] = relationship(back_populates="character")
-    favoritesCharacter: Mapped[list["FavoritesCharacter"]] = relationship(back_populates="character")
+     # realationship
+    favorites_character: Mapped[list["FavoritesCharacter"]] = relationship(back_populates="character", cascade= "all, delete-orphan")
 
     def serialize(self):
         return{
@@ -80,45 +78,44 @@ class Favorites(db.Model):
     character_id: Mapped[int] = mapped_column(ForeignKey('character.id'), nullable=True)    
 
     # realationship
-    planet: Mapped["Planet"] = relationship(back_populates="favorites")
-    character: Mapped["Character"] = relationship(back_populates="favorites")
     user: Mapped["User"] = relationship(back_populates="favorites")
-
-# en algunas cosas pongo str porque a veces puede ser "unknown"    
+    planets: Mapped[list["FavoritesPlanet"]] = relationship(back_populates="favorites", cascade="all, delete-orphan")
+    characters: Mapped[list["FavoritesCharacter"]] = relationship(back_populates="favorites", cascade="all, delete-orphan")
+   
 
 class FavoritesPlanet(db.Model):
-    __tablename__ = "favoritesPlanet"
+    __tablename__ = "favorites_planet"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey('user.id'), nullable=False)
+    favorites_id: Mapped[int] = mapped_column(ForeignKey('favorites.id'), nullable=False)
     planet_id: Mapped[int] = mapped_column(ForeignKey('planet.id'), nullable=True)    
 
     # relationship
-    planet: Mapped["Planet"] = relationship(back_populates="favoritesPlanet")
-    user: Mapped["User"] = relationship(back_populates="favoritesPlanet")
+    planet: Mapped["Planet"] = relationship(back_populates="favorites_planet")
+    favorites: Mapped["Favorites"] = relationship(back_populates="planets")
 
     def serialize(self):
         return{
             "id": self.id,
-             "user_id": self.user_id,
+             "favorites_id": self.favorites_id,
              "planet_id": self.planet_id,
         }
 
 
 class FavoritesCharacter(db.Model):
-    __tablename__ = "favoritesCharacter"
+    __tablename__ = "favorites_character"
     id: Mapped[int] = mapped_column(primary_key=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey('user.id'), nullable=False)
+    favorites_id: Mapped[int] = mapped_column(ForeignKey('favorites.id'), nullable=False)
     character_id: Mapped[int] = mapped_column(ForeignKey('character.id'), nullable=True)    
 
     # relationship
-    character: Mapped["Character"] = relationship(back_populates="favoritesCharacter")
-    user: Mapped["User"] = relationship(back_populates="favoritesCharacter")
+    character: Mapped["Character"] = relationship(back_populates="favorites_character")
+    favorites: Mapped["Favorites"] = relationship(back_populates="characters")
     
     def serialize(self):
         return{
             "id": self.id,
-             "user_id": self.user_id,
+             "favorites_id": self.favorites_id,
              "character_id": self.character_id,
         }
 
