@@ -81,6 +81,15 @@ class Favorites(db.Model):
     user: Mapped["User"] = relationship(back_populates="favorites")
     planets: Mapped[list["FavoritesPlanet"]] = relationship(back_populates="favorites", cascade="all, delete-orphan")
     characters: Mapped[list["FavoritesCharacter"]] = relationship(back_populates="favorites", cascade="all, delete-orphan")
+
+    def serialize(self):
+        return{
+            "id": self.id,
+             "user_id": self.user_id,
+             "planet_id": self.planet_id,
+             "character_id": self.character_id
+        }
+
    
 
 class FavoritesPlanet(db.Model):

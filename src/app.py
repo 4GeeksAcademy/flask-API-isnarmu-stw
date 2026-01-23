@@ -79,14 +79,27 @@ def get_user(user_id):
         return jsonify({"message": "user not found"}), 404
     return jsonify(user.serialize()), 200
 # GET USER FAVORITE
+
+
 @app.route("/user/favorites", methods=['GET'])
-def get_user_favorite():
+def get_user_favorites():
     favorites= db.session.execute(select(Favorites)).scalars().all()
     print(favorites)
 
     if not favorites:
         return jsonify({"message": "favorites not found"}), 404
     return jsonify({"favorites": [favorite.serialize() for favorite in favorites]}), 200
+
+# buscar favorito de un usuario en concreto
+
+@app.route("/user/<int:user_id>/favorite", methods=['GET'])
+def get_user_favorite(user_id):
+    favorite= db.session.execute(select(Favorites).where(Favorites.user_id == user_id)).scalar_one_or_none()
+
+    if not favorite:
+        return jsonify({"message": "favorite not found"}), 404
+    
+    return jsonify(favorite.serialize()), 200
 
 #Fin CRUD User ------------------
 
@@ -134,18 +147,28 @@ def add_favorite_character(character_id):
 # DELETE method
 
 
-@app.route("/favorite/character/<int:fav_id>", methods=['DELETE'])
-def delete_favorite_character(fav_id):
+@app.route("/favorite/character/<int:character_id>", methods=['DELETE'])
+def delete_favorite_character(character_id):
+
+    data = request.get_json()
+    user_id=data.get("user_id")
     
+    if not user_id:
+        return jsonify({"message": "user_id is required"}), 400
+
     # buscar el favorito
-    fav_result = db.session.execute(select(FavoritesCharacter).where(FavoritesCharacter.id == fav_id))
-    favorite = fav_result.scalar_one_or_none()
+    favorite = db.session.execute(select(Favorites).where(Favorites.user_id == user_id)).scalar_one_or_none()
 
     # comprobar qeu exxiste
     if not favorite:
         return jsonify({"message": "Favorite not found"}), 404
-    
-    db.session.delete(favorite)
+    # buscar favoritecharacter el qeu tenga es favorites_id +character_id
+    fav = db.session.execute(select(FavoritesCharacter).where(FavoritesCharacter.favorites_id == favorite.id,
+            FavoritesCharacter.character_id == character_id )).scalar_one_or_none()
+    if not fav:
+        return jsonify({"message": "Favorite not found"}), 404
+
+    db.session.delete(fav)
     db.session.commit()
 
     return jsonify({"message": "Favorite character deleted"}), 200
